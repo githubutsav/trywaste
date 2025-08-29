@@ -16,7 +16,6 @@
         <div class="flex items-center gap-4 text-sm">
             <span id="auth-user-email" class="text-slate-400"></span>
             <button id="logout-btn" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded">Logout</button>
-            <a href="index.html" class="text-emerald-400 hover:underline">User App</a>
         </div>
     </header>
     <main class="w-full max-w-4xl p-4 flex flex-col gap-6">
@@ -62,20 +61,27 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.5/dist/umd/supabase.min.js"></script>
     <script src="supabaseClient.js"></script>
     <script>
-        // Login/session check removed. Anyone can access this page.
-        const supabase = window.supabaseClient;
-        // Optionally, you can still show the user email if logged in
-        (async function(){
-            if (!supabase) return;
-            const { data: { session } } = await supabase.auth.getSession();
-            const span = document.getElementById('auth-user-email');
-            if (span && session && session.user) span.textContent = session.user.email;
-            const logoutBtn = document.getElementById('logout-btn');
-            logoutBtn?.addEventListener('click', async () => {
-                await supabase.auth.signOut();
-                window.location.href = 'login.html';
-            });
-        })();
+        // Require login for admin page and make logout button work robustly
+        document.addEventListener('DOMContentLoaded', () => {
+            const supabase = window.supabaseClient;
+            (async function(){
+                if (!supabase) return;
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session || !session.user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                const span = document.getElementById('auth-user-email');
+                if (span && session.user) span.textContent = session.user.email;
+                const logoutBtn = document.getElementById('logout-btn');
+                if (logoutBtn) {
+                    logoutBtn.onclick = async () => {
+                        await supabase.auth.signOut();
+                        window.location.href = 'login.html';
+                    };
+                }
+            })();
+        });
     </script>
     <script src="admin.js"></script>
 </body>

@@ -73,7 +73,8 @@ function renderMap() {
     adminMap = L.map('admin-map').setView([26.8467, 80.9462], 13);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(adminMap);
     markersLayer = L.layerGroup().addTo(adminMap);
-    filteredReports().forEach(addReportMarker);
+    // Show all active reports on the map, regardless of municipal filter
+    reports.filter(r => !['done','archived'].includes(r.status)).forEach(addReportMarker);
 }
 
 function renderList() {

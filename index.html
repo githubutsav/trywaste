@@ -38,12 +38,32 @@
                 <i data-lucide="map"></i>
                 <span>Map</span>
             </button>
-            <a href="login.html" id="login-link" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-full flex items-center space-x-2 transition text-sm sm:text-base">
-                <i data-lucide="user"></i>
-                <span>Login</span>
-            </a>
+            <button id="logout-btn" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-full flex items-center space-x-2 transition text-sm sm:text-base">
+                <i data-lucide="log-out"></i>
+                <span>Logout</span>
+            </button>
         </div>
     </header>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.5/dist/umd/supabase.min.js"></script>
+    <script src="supabaseClient.js"></script>
+        <script>
+            (async function(){
+                if (!window.supabaseClient) return;
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (!session || !session.user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                // Logout button logic
+                const logoutBtn = document.getElementById('logout-btn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', async () => {
+                        await window.supabaseClient.auth.signOut();
+                        window.location.href = 'login.html';
+                    });
+                }
+            })();
+        </script>
 
     <!-- Main Camera UI -->
     <main id="main-content" class="w-full max-w-3xl flex flex-col items-center">

@@ -101,9 +101,9 @@
 
   // Google OAuth
   document.getElementById('google-oauth')?.addEventListener('click', async () => {
-    setMessage('Redirecting to Google...');
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/admin.html' } });
-    if (error) setMessage(error.message, 'error');
+  setMessage('Redirecting to Google...');
+  const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/login.html' } });
+  if (error) setMessage(error.message, 'error');
   });
 
   // GitHub button removed
@@ -137,8 +137,26 @@
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     spinner.classList.add('hidden');
     if (error) return setMessage(error.message, 'error');
-    setMessage('Login successful. Redirecting...', 'success');
-    setTimeout(()=> window.location.href = 'admin.html', 800);
+    // After login, check user role and redirect
+    const { session } = data;
+    if (session && session.user) {
+      setMessage('Checking role...', 'info');
+      const { data: roleRow, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .single();
+      if (roleError || !roleRow) {
+        setMessage('Login successful. Redirecting to app...', 'success');
+        setTimeout(()=> window.location.href = 'index.html', 800);
+      } else if (roleRow.role === 'admin') {
+        setMessage('Welcome admin! Redirecting...', 'success');
+        setTimeout(()=> window.location.href = 'admin.html', 800);
+      } else {
+        setMessage('Login successful. Redirecting to app...', 'success');
+        setTimeout(()=> window.location.href = 'index.html', 800);
+      }
+    }
   });
 
   registerForm?.addEventListener('submit', async (e) => {
@@ -159,10 +177,25 @@
   });
 
   // If already logged in, skip
+  // If already logged in, check role and redirect
   const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-    setMessage('Already logged in. Redirecting...', 'success');
-    setTimeout(()=> window.location.href='admin.html', 500);
+  if (session && session.user) {
+    setMessage('Checking role...', 'info');
+    const { data: roleRow, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', session.user.id)
+      .single();
+    if (error || !roleRow) {
+      setMessage('Already logged in. Redirecting...', 'success');
+      setTimeout(()=> window.location.href = 'index.html', 500);
+    } else if (roleRow.role === 'admin') {
+      setMessage('Welcome admin! Redirecting...', 'success');
+      setTimeout(()=> window.location.href = 'admin.html', 500);
+    } else {
+      setMessage('Already logged in. Redirecting...', 'success');
+      setTimeout(()=> window.location.href = 'index.html', 500);
+    }
   }
 
   // Default state
