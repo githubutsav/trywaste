@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Garbage</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- LeafletJS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- Custom Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="flex flex-col h-screen items-center justify-center text-white p-4">
+
+    <!-- Header -->
+    <header class="absolute top-0 left-0 w-full p-4 sm:p-6 flex items-center justify-between z-10">
+        <a href="#" class="text-white flex items-center space-x-3">
+            <i data-lucide="recycle" class="w-8 h-8 text-emerald-400"></i>
+            <span class="text-2xl sm:text-3xl font-extrabold">me</menu></span>
+        </a>
+        <div class="flex items-center space-x-2" id="header-auth-area">
+            <button id="view-marketplace-btn" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-full flex items-center space-x-2 transition text-sm sm:text-base">
+                <i data-lucide="store"></i>
+                <span>Marketplace</span>
+            </button>
+            <button id="view-map-btn" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-full flex items-center space-x-2 transition text-sm sm:text-base">
+                <i data-lucide="map"></i>
+                <span>Map</span>
+            </button>
+            <a href="login.html" id="login-link" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-full flex items-center space-x-2 transition text-sm sm:text-base">
+                <i data-lucide="user"></i>
+                <span>Login</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Camera UI -->
+    <main id="main-content" class="w-full max-w-3xl flex flex-col items-center">
+        
+        <div id="camera-ui" class="w-full flex flex-col items-center space-y-6">
+            <h1 class="text-2xl font-semibold text-gray-300 text-center">Report Illegal Dumping</h1>
+            <p class="text-gray-400 text-center max-w-md">Point your camera at the garbage, capture a clear photo, and help us keep our city clean.</p>
+            
+            <div class="camera-container w-full aspect-video rounded-2xl flex items-center justify-center overflow-hidden">
+                <video id="camera-feed" autoplay playsinline class="hidden"></video>
+                <div id="placeholder" class="text-center text-gray-500">
+                    <i data-lucide="camera-off" class="w-16 h-16 mx-auto"></i>
+                    <p class="mt-2">Camera is off</p>
+                    <p class="text-sm">Click "Start Camera" to begin</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <button id="start-camera-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full flex items-center space-x-2 transition">
+                    <i data-lucide="video"></i>
+                    <span>Start Camera</span>
+                </button>
+                <button id="capture-btn" class="capture-button bg-red-600 hover:bg-red-700 text-white font-bold w-20 h-20 rounded-full flex items-center justify-center shadow-lg disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>
+                    <i data-lucide="camera" class="w-8 h-8"></i>
+                </button>
+                 <button id="retake-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-full flex items-center space-x-2 transition hidden">
+                    <i data-lucide="rotate-cw"></i>
+                    <span>Retake</span>
+                </button>
+            </div>
+        </div>
+        
+        <div id="submission-ui" class="w-full hidden flex-col items-center space-y-4">
+             <h1 class="text-2xl font-semibold text-gray-300 text-center">Confirm Your Report</h1>
+             <p class="text-gray-400 text-center max-w-md">Review the photo and the auto-detected location below.</p>
+            
+            <div class="w-full aspect-video rounded-2xl overflow-hidden bg-gray-800">
+                 <img id="photo-preview" src="" alt="Captured photo preview" class="w-full h-full object-cover">
+            </div>
+
+            <div id="map-preview" class="w-full bg-gray-800 border border-gray-700"></div>
+            
+            <div class="flex items-center space-x-4 pt-2">
+                <button id="submit-report-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-full flex items-center space-x-2 transition">
+                    <i data-lucide="send"></i>
+                    <span>Submit Report</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="verification-ui" class="w-full hidden flex-col items-center space-y-4">
+            <div class="spinner"></div>
+            <p class="text-lg font-semibold text-gray-300">Verifying image & location...</p>
+            <p class="text-gray-400 text-sm">Please wait while we analyze the photo.</p>
+        </div>
+
+        <canvas id="photo-canvas" class="hidden"></canvas>
+    </main>
+
+    <!-- Full Screen Map View -->
+    <div id="map-view" class="hidden">
+        <div id="full-map"></div>
+        <button id="back-to-camera-btn" class="absolute top-6 right-6 z-[1000] bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-full flex items-center space-x-2 transition">
+            <i data-lucide="x"></i>
+            <span>Close Map</span>
+        </button>
+        <button id="refresh-map-btn" class="absolute top-6 left-6 z-[1000] bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-full flex items-center space-x-2 transition">
+            <i data-lucide="refresh-cw"></i>
+            <span>Refresh</span>
+        </button>
+    </div>
+
+    <!-- Collector Marketplace View -->
+    <div id="marketplace-view" class="hidden p-4 pt-24">
+        <button id="back-to-camera-from-market-btn" class="absolute top-6 right-6 z-[1000] bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-full flex items-center space-x-2 transition">
+            <i data-lucide="x"></i>
+            <span>Close</span>
+        </button>
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold text-center mb-2 text-white">Collector Marketplace</h1>
+            <p class="text-center text-gray-400 mb-8">Find local collectors to sell your recyclable waste.</p>
+            <div id="collector-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Collector cards will be inserted here -->
+            </div>
+        </div>
+    </div>
+    
+    <div id="supabase-warn" class="hidden fixed top-0 left-1/2 -translate-x-1/2 mt-4 bg-red-600 text-white text-sm px-4 py-2 rounded shadow z-[2000]">
+        Supabase not loaded; reports will NOT persist remotely.
+    </div>
+    <footer class="absolute bottom-0 w-full p-4 text-center text-gray-500 text-sm z-10">
+        &copy; 2024 EcoTrack. All rights reserved.
+    </footer>
+    <!-- Supabase (must load before script.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.5/dist/umd/supabase.min.js"></script>
+    <script src="supabaseClient.js"></script>
+    <script>
+        (async function(){
+            if (!window.supabaseClient) return;
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            const link = document.getElementById('login-link');
+            if (session && link) {
+                link.href = 'admin.html';
+                link.querySelector('span').textContent = 'Dashboard';
+            }
+        })();
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
